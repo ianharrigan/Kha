@@ -202,6 +202,8 @@ class SystemImpl {
 			LoaderImpl._loadedSound(value.data);
 		case 'loadedBlob':
 			LoaderImpl._loadedBlob(value.data);
+		case 'uncompressedSound':
+			LoaderImpl._uncompressedSound(value.data);
 		case 'frame':
 			if (frame != null) {
 				Scheduler.executeFrame();
@@ -209,6 +211,9 @@ class SystemImpl {
 				System.render(0, frame);
 				Worker.postMessage({ command: 'endFrame' });
 			}
+		case 'setWindowSize':
+			width = value.data.width;
+			height = value.data.height;
 		case 'keyDown':
 			keyboard.sendDownEvent(cast value.data.key);
 		case 'keyUp':

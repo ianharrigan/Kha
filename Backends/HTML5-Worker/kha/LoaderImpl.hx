@@ -1,29 +1,30 @@
 package kha;
 
 import haxe.io.Bytes;
+import kha.graphics4.TextureFormat;
 
 class LoaderImpl {
 	static var loadingImages: Map<Int, Image->Void> = new Map();
-	static var imageId = -1;
 	static var loadingSounds: Map<Int, Sound->Void> = new Map();
 	static var soundId = -1;
 	static var loadingVideos: Map<Int, Video->Void> = new Map();
 	static var videoId = -1;
 	static var loadingBlobs: Map<Int, Blob->Void> = new Map();
 	static var blobId = -1;
+	static var sounds: Map<Int, Sound> = new Map();
 	
 	public static function getImageFormats(): Array<String> {
 		return ["png", "jpg", "hdr"];
 	}
 	
 	public static function loadImageFromDescription(desc: Dynamic, done: kha.Image -> Void) {
-		++imageId;
-		loadingImages[imageId] = done;
-		Worker.postMessage({ command: 'loadImage', file: desc.files[0], id: imageId });
+		++kha.Image._lastId;
+		loadingImages[kha.Image._lastId] = done;
+		Worker.postMessage({ command: 'loadImage', file: desc.files[0], id: kha.Image._lastId });
 	}
 	
 	public static function _loadedImage(value: Dynamic) {
-		var image = new Image(value.id, value.width, value.height, value.realWidth, value.realHeight);
+		var image = new Image(value.id, -1, value.width, value.height, value.realWidth, value.realHeight, TextureFormat.RGBA32);
 		loadingImages[value.id](image);
 		loadingImages.remove(value.id);
 	}
@@ -39,9 +40,14 @@ class LoaderImpl {
 	}
 
 	public static function _loadedSound(value: Dynamic) {
-		var sound = new kha.html5worker.Sound();
+		var sound = new kha.html5worker.Sound(value.id);
 		loadingSounds[value.id](sound);
 		loadingSounds.remove(value.id);
+		sounds.set(value.id, sound);
+	}
+	
+	public static function _uncompressedSound(value: Dynamic): Void {
+		cast(sounds[value.id], kha.html5worker.Sound)._callback();
 	}
 	
 	public static function getVideoFormats(): Array<String> {
