@@ -115,23 +115,28 @@ class KravurImage {
 	}
 }
 
-class Kravur implements Font {
+class Kravur implements Resource {
 	private var blob: Blob;
 	private var images: Map<Int, KravurImage> = new Map();
 	
 	public function new(blob: Blob) {
 		this.blob = blob;
 	}
+
+	public static function fromBytes(bytes: Bytes): Kravur {
+		return new Kravur(Blob.fromBytes(bytes));
+	}
 	
 	public function _get(fontSize: Int, glyphs: Array<Int> = null): KravurImage {
-		if (!images.exists(fontSize)) {
+		var imageIndex = glyphs == null ? fontSize : fontSize * 10000 + glyphs.length;
+		if (!images.exists(imageIndex)) {
 			if (glyphs == null) {
 				glyphs = [];
 				for (i in 32...256) {
 					glyphs.push(i);
 				}
 			}
-			
+
 			var width: Int = 64;
 			var height: Int = 32;
 			var baked = new Vector<Stbtt_bakedchar>(glyphs.length);
@@ -161,10 +166,10 @@ class Kravur implements Font {
 			var lineGap = Math.round(metrics.lineGap * scale);
 			
 			var image = new KravurImage(Std.int(fontSize), ascent, descent, lineGap, width, height, baked, pixels);
-			images[fontSize] = image;
+			images[imageIndex] = image;
 			return image;
 		}
-		return images[fontSize];
+		return images[imageIndex];
 	}
 
 	public function height(fontSize: Int): Float {

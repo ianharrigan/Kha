@@ -363,6 +363,7 @@ class SystemImpl {
 			frame.init(new kha.graphics2.Graphics1(frame), new kha.js.graphics4.Graphics2(frame), g4); // new kha.graphics1.Graphics4(frame));
 		}
 		else {
+			untyped __js__ ("kha_Kravur = kha_js_Font");
 			var g2 = new CanvasGraphics(canvas.getContext("2d"));
 			frame = new Framebuffer(0, null, g2, null);
 			frame.init(new kha.graphics2.Graphics1(frame), g2, null);
@@ -877,6 +878,7 @@ class SystemImpl {
 
 	private static function keyPress(event: KeyboardEvent): Void {
 		event.stopPropagation();
+		if (firefox && (event.which == 0 || event.which == 8)) return; // Firefox bug 968056
 		keyboard.sendPressEvent(String.fromCharCode(event.which));
 	}
 

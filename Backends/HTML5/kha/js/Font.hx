@@ -1,19 +1,25 @@
 package kha.js;
 
+import haxe.io.Bytes;
 import js.Browser;
 import js.html.ImageElement;
 import kha.Color;
 import kha.FontStyle;
 import kha.Kravur;
 
-class Font implements kha.Font {
+@:keep
+class Font implements Resource {
 	public var kravur: Kravur;
 	private var images: Map<Int, Map<Int, ImageElement>> = new Map();
 	
-	public function new(kravur: Kravur) {
-		this.kravur = kravur;
+	public function new(blob: Blob) {
+		this.kravur = new Kravur(blob);
 	}
 	
+	public static function fromBytes(bytes: Bytes): Font {
+		return new Font(Blob.fromBytes(bytes));
+	}
+
 	public function height(fontSize: Int): Float {
 		return kravur._get(fontSize).getHeight();
 	}
@@ -30,12 +36,13 @@ class Font implements kha.Font {
 		return kravur._get(fontSize).getBaselinePosition();
 	}
 	
-	public function getImage(fontSize: Int, color: Color): ImageElement {
-		if (!images.exists(fontSize)) {
-			images[fontSize] = new Map();
+	public function getImage(fontSize: Int, color: Color, glyphs: Array<Int> = null): ImageElement {
+		var imageIndex = glyphs == null ? fontSize : fontSize * 10000 + glyphs.length;
+		if (!images.exists(imageIndex)) {
+			images[imageIndex] = new Map();
 		}
-		if (!images[fontSize].exists(color.value)) {
-			var kravur = this.kravur._get(fontSize);
+		if (!images[imageIndex].exists(color.value)) {
+			var kravur = this.kravur._get(fontSize, glyphs);
 			var canvas: Dynamic = Browser.document.createElement("canvas");
 			canvas.width = kravur.width;
 			canvas.height = kravur.height;
@@ -55,10 +62,10 @@ class Font implements kha.Font {
 		
 			var img: ImageElement = cast Browser.document.createElement("img");
 			img.src = canvas.toDataURL("image/png");
-			images[fontSize][color.value] = img;
+			images[imageIndex][color.value] = img;
 			return img;
 		}
-		return images[fontSize][color.value];
+		return images[imageIndex][color.value];
 	}
 	
 	public function unload(): Void {
